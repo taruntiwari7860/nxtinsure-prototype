@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NxtInsure — Microinsurance Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F4F1EC;
+    --surface: #FFFFFF;
+    --surface2: #F9F7F4;
+    --border: #E2DED6;
+    --text: #1A1916;
+    --text-2: #6B6860;
+    --text-3: #9E9B95;
+    --accent: #1A5C3A;
+    --accent-light: #E8F3ED;
+    --accent-mid: #2E8A58;
+    --amber: #B86B00;
+    --amber-light: #FFF3DC;
+    --red: #C0392B;
+    --red-light: #FEF0EE;
+    --blue: #1B4F8A;
+    --blue-light: #EBF2FB;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .telco-bar {
+    background: var(--accent);
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .telco-brand { font-weight: 600; font-size: 15px; letter-spacing: -0.3px; }
+  .telco-signal { display: flex; align-items: center; gap: 8px; opacity: 0.85; }
+
+  .shell {
+    max-width: 420px;
+    margin: 0 auto;
+    min-height: calc(100vh - 44px);
+    background: var(--surface);
+  }
+
+  .screen { display: none; flex-direction: column; min-height: calc(100vh - 44px); }
+  .screen.active { display: flex; }
+
+  .screen-header {
+    padding: 20px 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--surface);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    color: var(--text-2);
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .back-btn:hover { background: var(--surface2); }
+  .screen-title { font-size: 14px; color: var(--text-2); }
+
+  .progress-wrap { padding: 16px 20px 0; }
+  .progress-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+  .progress-label { font-size: 12px; color: var(--text-3); margin-top: 6px; font-family: 'DM Mono', monospace; }
+
+  .content { padding: 24px 20px; flex: 1; }
+  .hero-label { font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .hero-title { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.25; color: var(--text); margin-bottom: 6px; }
+  .hero-sub { font-size: 14px; color: var(--text-2); margin-bottom: 28px; line-height: 1.6; }
+
+  .product-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .product-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    background: var(--surface);
+  }
+  .product-card:hover { border-color: var(--accent-mid); background: var(--accent-light); }
+  .product-card.selected { border-color: var(--accent); background: var(--accent-light); }
+  .product-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 22px; height: 22px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .product-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+  .product-name { font-weight: 600; font-size: 15px; margin-bottom: 3px; }
+  .product-desc { font-size: 13px; color: var(--text-2); margin-bottom: 10px; }
+  .product-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; }
+  .tag-green { background: var(--accent-light); color: var(--accent); }
+  .tag-amber { background: var(--amber-light); color: var(--amber); }
+  .tag-blue { background: var(--blue-light); color: var(--blue); }
+
+  .form-group { margin-bottom: 18px; }
+  .form-label { font-size: 13px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-select {
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%236B6860' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  .tier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+  .tier-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface);
+  }
+  .tier-card:hover { border-color: var(--accent-mid); }
+  .tier-card.selected { border-color: var(--accent); background: var(--accent-light); }
+  .tier-price { font-size: 18px; font-weight: 600; color: var(--text); font-family: 'DM Mono', monospace; }
+  .tier-period { font-size: 11px; color: var(--text-3); margin-bottom: 4px; }
+  .tier-label { font-size: 12px; font-weight: 500; color: var(--text-2); }
+  .tier-cover { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+
+  .quote-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .quote-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 14px; }
+  .quote-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+  .quote-key { color: var(--text-2); }
+  .quote-val { font-weight: 500; color: var(--text); }
+
+  .quote-total {
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .quote-total-label { color: rgba(255,255,255,0.8); font-size: 13px; }
+  .quote-total-amount { color: white; font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .quote-total-period { color: rgba(255,255,255,0.7); font-size: 12px; }
+
+  .benefit-list { list-style: none; margin-bottom: 20px; }
+  .benefit-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--border); }
+  .benefit-item:last-child { border-bottom: none; }
+  .benefit-check { color: var(--accent); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .benefit-text { color: var(--text-2); }
+  .benefit-amount { font-weight: 500; color: var(--text); display: block; font-size: 13px; }
+
+  .otp-wrap { display: flex; gap: 10px; justify-content: center; margin: 24px 0; }
+  .otp-box {
+    width: 52px; height: 60px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    outline: none;
+    color: var(--text);
+    background: var(--surface);
+    transition: border-color 0.2s;
+  }
+  .otp-box:focus { border-color: var(--accent); }
+  .otp-hint { text-align: center; font-size: 13px; color: var(--text-3); margin-bottom: 8px; }
+  .otp-resend { text-align: center; font-size: 13px; color: var(--accent); cursor: pointer; font-weight: 500; }
+
+  .success-icon {
+    width: 72px; height: 72px;
+    background: var(--accent-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 20px;
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+  .policy-number {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    text-align: center;
+    color: var(--text-2);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+  .policy-number span { color: var(--accent); font-weight: 600; }
+
+  .wallet-notice {
+    background: var(--amber-light);
+    border: 1px solid #F5D99A;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--amber);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .wallet-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .action-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    background: var(--surface);
+  }
+  .action-item:hover { background: var(--surface2); }
+  .action-item-icon { font-size: 20px; margin-bottom: 6px; display: block; }
+  .action-item-label { font-size: 12px; color: var(--text-2); font-weight: 500; }
+
+  .cta-wrap { padding: 16px 20px; border-top: 1px solid var(--border); background: var(--surface); }
+  .cta-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.2px;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .cta-btn:hover { background: #154D30; }
+  .cta-btn:active { transform: scale(0.99); }
+  .cta-btn:disabled { background: var(--text-3); cursor: not-allowed; }
+  .cta-btn.secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    margin-top: 8px;
+  }
+  .cta-btn.secondary:hover { background: var(--accent-light); }
+
+  .step-dots { display: flex; gap: 6px; justify-content: center; padding: 12px 0 0; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
+  .dot.active { background: var(--accent); width: 20px; border-radius: 3px; }
+  .dot.done { background: var(--accent-mid); }
+
+  .insurer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    background: var(--blue-light);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--blue);
+  }
+  .insurer-logo {
+    width: 28px; height: 28px;
+    background: var(--blue);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .section-divider { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); margin: 20px 0 12px; }
+
+  .consent-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    cursor: pointer;
+  }
+  .consent-check {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+  .consent-check.unchecked { background: var(--surface); border-color: var(--border); color: transparent; }
+  .consent-text { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .consent-text a { color: var(--accent); text-decoration: none; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .screen.active { animation: fadeIn 0.25s ease; }
+</style>
+</head>
+<body>
+
+<div class="telco-bar">
+  <div class="telco-brand">MTN Uganda 🇺🇬</div>
+  <div class="telco-signal">
+    <span>MoMo Balance: UGX 145,000</span>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- SCREEN 1: Product Selection -->
+  <div class="screen active" id="s1">
+    <div class="content">
+      <div class="step-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div style="height: 20px;"></div>
+      <div class="hero-label">NxtInsure via MTN MoMo</div>
+      <div class="hero-title">Protect what matters most</div>
+      <div class="hero-sub">Choose a cover that fits your life. Premiums deducted from your MoMo wallet.</div>
+
+      <div class="product-grid">
+        <div class="product-card" onclick="selectProduct(this, 'life')" data-product="life">
+          <span class="product-icon">🛡️</span>
+          <div class="product-name">Life Cover</div>
+          <div class="product-desc">Financial protection for your family if the unexpected happens.</div>
+          <div class="product-tags">
+            <span class="tag tag-green">From UGX 3,000/mo</span>
+            <span class="tag tag-blue">Britam</span>
+          </div>
+        </div>
+        <div class="product-card" onclick="selectProduct(this, 'hospital')" data-product="hospital">
+          <span class="product-icon">🏥</span>
+          <div class="product-name">Hospital Cash</div>
+          <div class="product-desc">Daily cash payout for every night you spend in hospital.</div>
+          <div class="product-tags">
+            <span class="tag tag-green">From UGX 2,000/mo</span>
+            <span class="tag tag-blue">Jubilee</span>
+          </div>
+        </div>
+        <div class="product-card" onclick="selectProduct(this, 'accident')" data-product="accident">
+          <span class="product-icon">⚡</span>
+          <div class="product-name">Personal Accident</div>
+          <div class="product-desc">Lump sum cover for disability or accidental death.</div>
+          <div class="product-tags">
+            <span class="tag tag-green">From UGX 1,500/mo</span>
+            <span class="tag tag-amber">SanlamAllianz</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cta-wrap">
+      <button class="cta-btn" id="s1-cta" disabled onclick="goto('s2')">Get a Quote →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Details -->
+  <div class="screen" id="s2">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goto('s1')">←</button>
+      <span class="screen-title">Your Details</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" style="width: 40%"></div></div>
+      <div class="progress-label">Step 2 of 5</div>
+    </div>
+    <div class="content">
+      <div class="step-dots">
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div style="height: 16px;"></div>
+      <div class="hero-title" style="font-size: 20px;">Tell us about yourself</div>
+      <div class="hero-sub" style="margin-bottom: 20px;">Used to calculate your personalised premium.</div>
+
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" placeholder="As on your national ID" value="Joseph Mukasa">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date of Birth</label>
+        <input class="form-input" type="date" value="1988-04-12">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gender</label>
+        <select class="form-input form-select">
+          <option>Male</option>
+          <option>Female</option>
+          <option>Prefer not to say</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Occupation</label>
+        <select class="form-input form-select">
+          <option>Employed (formal)</option>
+          <option>Self-employed / Business</option>
+          <option>Boda-boda / Transport</option>
+          <option>Agriculture / Farming</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="cta-wrap">
+      <button class="cta-btn" onclick="goto('s3')">Continue →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Cover Selection -->
+  <div class="screen" id="s3">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goto('s2')">←</button>
+      <span class="screen-title">Choose Cover Level</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" style="width: 60%"></div></div>
+      <div class="progress-label">Step 3 of 5</div>
+    </div>
+    <div class="content">
+      <div class="step-dots">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <div style="height: 16px;"></div>
+
+      <div class="insurer-row">
+        <div class="insurer-logo">BR</div>
+        <div>
+          <strong>Britam Life Uganda</strong> · Regulated by IRA Uganda<br>
+          <span style="font-size: 12px; color: var(--blue); opacity: 0.8;">Policy underwritten by Britam Insurance</span>
+        </div>
+      </div>
+
+      <div class="section-divider">Select your tier</div>
+      <div class="tier-grid">
+        <div class="tier-card" onclick="selectTier(this, 3000, 1000000, 'Basic')">
+          <div class="tier-price">3K</div>
+          <div class="tier-period">per month</div>
+          <div class="tier-label">Basic</div>
+          <div class="tier-cover">1M cover</div>
+        </div>
+        <div class="tier-card selected" onclick="selectTier(this, 6000, 3000000, 'Standard')">
+          <div class="tier-price">6K</div>
+          <div class="tier-period">per month</div>
+          <div class="tier-label">Standard</div>
+          <div class="tier-cover">3M cover</div>
+        </div>
+        <div class="tier-card" onclick="selectTier(this, 12000, 7000000, 'Premium')">
+          <div class="tier-price">12K</div>
+          <div class="tier-period">per month</div>
+          <div class="tier-label">Premium</div>
+          <div class="tier-cover">7M cover</div>
+        </div>
+      </div>
+
+      <div class="section-divider">What's covered</div>
+      <ul class="benefit-list">
+        <li class="benefit-item">
+          <span class="benefit-check">✓</span>
+          <div>
+            <span class="benefit-text">Death benefit (any cause)</span>
+            <span class="benefit-amount" id="cover-death">UGX 3,000,000</span>
+          </div>
+        </li>
+        <li class="benefit-item">
+          <span class="benefit-check">✓</span>
+          <div>
+            <span class="benefit-text">Total permanent disability</span>
+            <span class="benefit-amount" id="cover-disability">UGX 1,500,000</span>
+          </div>
+        </li>
+        <li class="benefit-item">
+          <span class="benefit-check">✓</span>
+          <div>
+            <span class="benefit-text">Funeral benefit</span>
+            <span class="benefit-amount" id="cover-funeral">UGX 500,000</span>
+          </div>
+        </li>
+        <li class="benefit-item">
+          <span class="benefit-check">✓</span>
+          <div>
+            <span class="benefit-text">Monthly premium</span>
+            <span class="benefit-amount" id="cover-premium" style="color: var(--accent);">UGX 6,000</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="cta-wrap">
+      <button class="cta-btn" onclick="goto('s4')">Review My Quote →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: Quote Review + Consent -->
+  <div class="screen" id="s4">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goto('s3')">←</button>
+      <span class="screen-title">Review & Confirm</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" style="width: 80%"></div></div>
+      <div class="progress-label">Step 4 of 5</div>
+    </div>
+    <div class="content">
+      <div class="step-dots">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+      <div style="height: 16px;"></div>
+
+      <div class="quote-total">
+        <div>
+          <div class="quote-total-label">Monthly premium</div>
+          <div class="quote-total-period">Auto-deducted from MoMo</div>
+        </div>
+        <div class="quote-total-amount" id="qt-amount">UGX 6,000</div>
+      </div>
+
+      <div class="quote-card">
+        <div class="quote-row">
+          <span class="quote-key">Product</span>
+          <span class="quote-val" id="qt-product">Life Cover</span>
+        </div>
+        <div class="quote-row">
+          <span class="quote-key">Insurer</span>
+          <span class="quote-val">Britam Uganda</span>
+        </div>
+        <div class="quote-row">
+          <span class="quote-key">Policyholder</span>
+          <span class="quote-val">Joseph Mukasa</span>
+        </div>
+        <div class="quote-row">
+          <span class="quote-key">Cover amount</span>
+          <span class="quote-val" id="qt-cover">UGX 3,000,000</span>
+        </div>
+        <div class="quote-row">
+          <span class="quote-key">Tier</span>
+          <span class="quote-val" id="qt-tier">Standard</span>
+        </div>
+        <div class="quote-row">
+          <span class="quote-key">Start date</span>
+          <span class="quote-val" id="qt-start">—</span>
+        </div>
+        <div class="quote-row">
+          <span class="quote-key">Policy channel</span>
+          <span class="quote-val">MTN MoMo (Uganda)</span>
+        </div>
+      </div>
+
+      <div class="wallet-notice">
+        <span class="wallet-icon">💳</span>
+        <span>Your first premium of <strong id="wn-amount">UGX 6,000</strong> will be deducted from your MTN MoMo balance today. Subsequent deductions occur on this date each month.</span>
+      </div>
+
+      <div class="consent-wrap" onclick="toggleConsent()">
+        <div class="consent-check" id="consent-box">✓</div>
+        <div class="consent-text">
+          I authorise MTN to deduct my monthly premium from my MoMo wallet and agree to the <a href="#">Policy Terms</a> and <a href="#">Privacy Notice</a>.
+        </div>
+      </div>
+
+      <div style="font-size: 12px; color: var(--text-3); margin-bottom: 8px;">
+        You will receive a one-time PIN to verify this transaction.
+      </div>
+    </div>
+    <div class="cta-wrap">
+      <button class="cta-btn" onclick="goto('s5')">Confirm & Get OTP →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: OTP -->
+  <div class="screen" id="s5">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goto('s4')">←</button>
+      <span class="screen-title">Verify Transaction</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" style="width: 95%"></div></div>
+      <div class="progress-label">Step 5 of 5</div>
+    </div>
+    <div class="content" style="text-align: center;">
+      <div class="step-dots">
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot done"></div>
+        <div class="dot active"></div>
+      </div>
+      <div style="height: 24px;"></div>
+      <div style="font-size: 40px; margin-bottom: 16px;">📱</div>
+      <div class="hero-title" style="font-size: 20px; margin-bottom: 8px;">Enter your OTP</div>
+      <div class="otp-hint">Sent to +256 77x xxx x89 via SMS</div>
+      <div class="otp-wrap">
+        <input class="otp-box" maxlength="1" type="tel" id="o1" oninput="otpNext(this,'o2')" onkeydown="otpBack(event,this,'')">
+        <input class="otp-box" maxlength="1" type="tel" id="o2" oninput="otpNext(this,'o3')" onkeydown="otpBack(event,this,'o1')">
+        <input class="otp-box" maxlength="1" type="tel" id="o3" oninput="otpNext(this,'o4')" onkeydown="otpBack(event,this,'o2')">
+        <input class="otp-box" maxlength="1" type="tel" id="o4" oninput="checkOtp()" onkeydown="otpBack(event,this,'o3')">
+      </div>
+      <div class="otp-resend" onclick="resendOtp()">Resend OTP</div>
+      <div style="height: 20px;"></div>
+      <div style="font-size: 13px; color: var(--text-3);">Enter any 4 digits to activate your policy in this prototype.</div>
+    </div>
+    <div class="cta-wrap">
+      <button class="cta-btn" id="otp-cta" disabled onclick="goto('s6')">Activate Policy →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 6: Success -->
+  <div class="screen" id="s6">
+    <div class="content" style="text-align: center; padding-top: 40px;">
+      <div class="success-icon">✅</div>
+      <div class="hero-title" style="margin-bottom: 6px;">You're covered!</div>
+      <div class="hero-sub" style="margin-bottom: 20px;">Your Life Cover policy is now active. Your family is protected.</div>
+
+      <div class="policy-number">
+        Policy No. <span id="policy-no">NXT-UG-2024-084731</span>
+      </div>
+
+      <div class="quote-card" style="text-align: left;">
+        <div class="quote-row">
+          <span class="quote-key">Cover amount</span>
+          <span class="quote-val" id="suc-cover">UGX 3,000,000</span>
+        </div>
+        <div class="quote-row">
+          <span class="quote-key">Next deduction</span>
+          <span class="quote-val" id="suc-next">—</span>
+        </div>
+        <div class="quote-row">
+          <span class="quote-key">Insurer</span>
+          <span class="quote-val">Britam Uganda</span>
+        </div>
+        <div class="quote-row">
+          <span class="quote-key">Channel</span>
+          <span class="quote-val">MTN MoMo</span>
+        </div>
+        <div class="quote-row" style="border-bottom: none;">
+          <span class="quote-key">Status</span>
+          <span style="background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px;">ACTIVE</span>
+        </div>
+      </div>
+
+      <div class="action-grid">
+        <div class="action-item">
+          <span class="action-item-icon">📄</span>
+          <span class="action-item-label">Download Policy</span>
+        </div>
+        <div class="action-item">
+          <span class="action-item-icon">🏥</span>
+          <span class="action-item-label">File a Claim</span>
+        </div>
+        <div class="action-item">
+          <span class="action-item-icon">👥</span>
+          <span class="action-item-label">Add Beneficiary</span>
+        </div>
+        <div class="action-item">
+          <span class="action-item-icon">📞</span>
+          <span class="action-item-label">Contact Britam</span>
+        </div>
+      </div>
+    </div>
+    <div class="cta-wrap">
+      <button class="cta-btn secondary" onclick="restart()">← Explore more products</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let selectedProduct = null;
+  let selectedTier = { premium: 6000, cover: 3000000, label: 'Standard' };
+  let consentGiven = true;
+
+  function goto(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (id === 's4') populateQuote();
+    if (id === 's6') populateSuccess();
+  }
+
+  function selectProduct(el, type) {
+    document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedProduct = type;
+    document.getElementById('s1-cta').disabled = false;
+  }
+
+  function selectTier(el, premium, cover, label) {
+    document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedTier = { premium, cover, label };
+    const fmt = n => 'UGX ' + n.toLocaleString();
+    document.getElementById('cover-death').textContent = fmt(cover);
+    document.getElementById('cover-disability').textContent = fmt(Math.round(cover * 0.5));
+    document.getElementById('cover-funeral').textContent = fmt(Math.round(cover * 0.17));
+    document.getElementById('cover-premium').textContent = fmt(premium);
+  }
+
+  function populateQuote() {
+    const fmt = n => 'UGX ' + n.toLocaleString();
+    const productNames = { life: 'Life Cover', hospital: 'Hospital Cash', accident: 'Personal Accident' };
+    document.getElementById('qt-amount').textContent = fmt(selectedTier.premium);
+    document.getElementById('qt-product').textContent = productNames[selectedProduct] || 'Life Cover';
+    document.getElementById('qt-cover').textContent = fmt(selectedTier.cover);
+    document.getElementById('qt-tier').textContent = selectedTier.label;
+    document.getElementById('wn-amount').textContent = fmt(selectedTier.premium);
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    document.getElementById('qt-start').textContent = d.toLocaleDateString('en-UG', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function populateSuccess() {
+    const fmt = n => 'UGX ' + n.toLocaleString();
+    document.getElementById('suc-cover').textContent = fmt(selectedTier.cover);
+    const next = new Date(); next.setMonth(next.getMonth() + 1);
+    document.getElementById('suc-next').textContent = next.toLocaleDateString('en-UG', { day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('policy-no').textContent = 'NXT-UG-' + new Date().getFullYear() + '-' + Math.floor(100000 + Math.random() * 900000);
+  }
+
+  function toggleConsent() {
+    consentGiven = !consentGiven;
+    const box = document.getElementById('consent-box');
+    box.classList.toggle('unchecked', !consentGiven);
+    box.textContent = consentGiven ? '✓' : '';
+  }
+
+  function otpNext(el, nextId) {
+    if (el.value.length === 1 && nextId) document.getElementById(nextId).focus();
+  }
+  function otpBack(e, el, prevId) {
+    if (e.key === 'Backspace' && !el.value && prevId) document.getElementById(prevId).focus();
+  }
+  function checkOtp() {
+    const filled = ['o1','o2','o3','o4'].every(id => document.getElementById(id).value.length === 1);
+    document.getElementById('otp-cta').disabled = !filled;
+  }
+  function resendOtp() {
+    ['o1','o2','o3','o4'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('o1').focus();
+    document.getElementById('otp-cta').disabled = true;
+  }
+
+  function restart() {
+    selectedProduct = null;
+    document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('s1-cta').disabled = true;
+    ['o1','o2','o3','o4'].forEach(id => { document.getElementById(id).value = ''; });
+    goto('s1');
+  }
+
+  selectTier(document.querySelector('.tier-card.selected'), 6000, 3000000, 'Standard');
+</script>
+</body>
+</html>
